@@ -448,6 +448,31 @@ PULSE_DATA_INGESTION_SOURCES = env.json(
         # ... other CI systems
     ])
 
+PULSE_RESULTSET_SOURCES = env.json(
+    "PULSE_RESULTSET_SOURCES",
+    default=[
+        {
+            "name": "exchange/taskcluster-github/v1/push",
+            "projects": [
+                'mozilla.gecko-dev'
+                'mozilla.testpilot'
+            ],
+            "destinations": [
+                '#'
+            ]
+        },
+        {
+            "name": "exchange/taskcluster-github/v1/pull-request",
+            "projects": [
+                '#'
+            ],
+            "destinations": [
+                '#'
+            ]
+        }
+        # ... other CI systems
+    ])
+
 # Used for making API calls to Pulse Guardian, such as detecting bindings on
 # the current ingestion queue.
 PULSE_GUARDIAN_URL = "https://pulseguardian.mozilla.org/"
