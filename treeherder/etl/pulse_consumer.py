@@ -6,7 +6,8 @@ from kombu import (Exchange,
 from kombu.mixins import ConsumerMixin
 
 from treeherder.etl.common import fetch_json
-from treeherder.etl.tasks.pulse_tasks import store_pulse_jobs
+from treeherder.etl.tasks.pulse_tasks import (store_pulse_jobs,
+                                              store_pulse_resultsets)
 
 logger = logging.getLogger(__name__)
 
