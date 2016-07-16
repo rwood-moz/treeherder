@@ -14,26 +14,28 @@ class ResultsetLoader:
     """Transform and load a list of Resultsets"""
 
     def process(self, resultset, exchange):
-
+        logger.info("Begin processing")
         transformer = self.get_transformer(resultset, exchange)
         try:
+            transformer.transform()
             repo = Repository.objects.get(url=transformer.repo_url)
 
             with JobsModel(repo.name) as jobs_model:
                 jobs_model.store_result_set_data(
-                    transformer.transform(resultset))
+                    transformer.transform())
 
         except ObjectDoesNotExist:
             newrelic.agent.record_custom_event("skip_unknown_repository",
                                                resultset["details"])
+            logger.warn("Unsupported repo: {}".format(transformer.repo_url))
 
     def get_transformer(self, resultset, exchange):
-        if exchange.contains("github"):
+        if "github" in exchange:
             if exchange.endswith("push"):
                 return GithubPushTransformer(resultset, exchange)
             elif exchange.endswith("pull-request"):
                 return GithubPullRequestTransformer(resultset, exchange)
-        elif exchange.contains("hgpushes"):
+        elif "hgpushes" in exchange:
             return HgPushTransformer(resultset, exchange)
         raise PulseResultsetError(
             "Unsupported resultset type: {}".format(exchange))
@@ -71,8 +73,17 @@ class GithubPushTransformer(GithubTransformer):
 
     def transform(self):
         commit = self.resultset["details"]["event.head.sha"]
-        push_url = "https://api.github.com/repos/mozilla/fxa-auth-server/commits"
-        url = "https://api.github.com/repos/mozilla/fxa-auth-server/commits?sha=8ad10c9435217397627b98ff3753eff9e22cdd9d"
+        push_url = "https://api.github.com/repos/{}/{}/commits".format(
+            self.resultset["organization"],
+            self.resultset["repository"]
+        )
+        params = {"sha": commit}
+        commit1 = fetch_json(push_url, params)[0]
+
+        logger.info(commit1["sha"])
+        logger.info(commit1["commit"]["author"]["email"])
+
+        # url = "https://api.github.com/repos/mozilla/fxa-auth-server/commits?sha=8ad10c9435217397627b98ff3753eff9e22cdd9d"
         # do the transformation of what we have into a skeleton RS and either
         # schedule a celery task to fill-in, or just do it here.  The RPM may
         # well be low enough that it's fine to just make the query here.

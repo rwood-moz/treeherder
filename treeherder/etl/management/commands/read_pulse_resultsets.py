@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from kombu import (Connection,
                    Exchange)
 
-from treeherder.etl.pulse_consumer import PulseConsumer
+from treeherder.etl.pulse_consumer import ResultsetConsumer
 
 
 class Command(BaseCommand):
@@ -20,13 +20,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         config = settings.PULSE_DATA_INGESTION_CONFIG
         assert config, "PULSE_DATA_INGESTION_CONFIG must be set"
-        sources = settings.PULSE_DATA_INGESTION_SOURCES
+        sources = settings.PULSE_RESULTSET_SOURCES
         assert sources, "PULSE_RESULTSET_SOURCES must be set"
 
         new_bindings = []
 
         with Connection(config.geturl()) as connection:
-            consumer = PulseConsumer(connection, "resultsets")
+            consumer = ResultsetConsumer(connection, "resultsets")
 
             for source in sources:
                 # When creating this exchange object, it is important that it

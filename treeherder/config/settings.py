@@ -210,6 +210,7 @@ CELERY_QUEUES = [
     Queue('fetch_bugs', Exchange('default'), routing_key='fetch_bugs'),
     Queue('generate_perf_alerts', Exchange('default'), routing_key='generate_perf_alerts'),
     Queue('store_pulse_jobs', Exchange('default'), routing_key='store_pulse_jobs'),
+    Queue('store_pulse_resultsets', Exchange('default'), routing_key='store_pulse_resultsets'),
 ]
 
 CELERY_ACCEPT_CONTENT = ['json']
@@ -452,17 +453,25 @@ PULSE_RESULTSET_SOURCES = env.json(
     "PULSE_RESULTSET_SOURCES",
     default=[
         {
-            "name": "exchange/taskcluster-github/v1/push",
+            "exchange": "exchange/taskcluster-github/v1/push",
             "projects": [
-                'mozilla.gecko-dev'
-                'mozilla.testpilot'
+                '#'
             ],
             "destinations": [
                 '#'
             ]
         },
         {
-            "name": "exchange/taskcluster-github/v1/pull-request",
+            "exchange": "exchange/taskcluster-github/v1/pull-request",
+            "projects": [
+                '#'
+            ],
+            "destinations": [
+                '#'
+            ]
+        },
+        {
+            "exchange": "exchange/treeherder-test/github/push",
             "projects": [
                 '#'
             ],
