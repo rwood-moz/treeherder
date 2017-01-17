@@ -195,6 +195,7 @@ class Bugscache(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
     status = models.CharField(max_length=64, db_index=True)
     resolution = models.CharField(max_length=64, blank=True, db_index=True)
+    # Is covered by a FULLTEXT index created via a migrations RunSQL operation.
     summary = models.CharField(max_length=255)
     crash_signature = models.TextField(blank=True)
     keywords = models.TextField(blank=True)
@@ -1074,7 +1075,8 @@ class FailureLine(models.Model):
     status = models.CharField(max_length=7, choices=STATUS_CHOICES)
     expected = models.CharField(max_length=7, choices=STATUS_CHOICES, blank=True, null=True)
     message = models.TextField(blank=True, null=True)
-    signature = models.TextField(blank=True, null=True)  # Prefix index length 50
+    # We manually create a prefix index: signature(50)
+    signature = models.TextField(blank=True, null=True)
     level = models.CharField(max_length=8, choices=STATUS_CHOICES, blank=True, null=True)
     stack = models.TextField(blank=True, null=True)
     stackwalk_stdout = models.TextField(blank=True, null=True)
@@ -1101,8 +1103,9 @@ class FailureLine(models.Model):
         db_table = 'failure_line'
         index_together = (
             ('job_guid', 'repository'),
-            # The test and subtest indicies are length 50 and 25, respectively
+            # Prefix index: test(50), subtest(25), status, expected, created
             ('test', 'subtest', 'status', 'expected', 'created'),
+            # Prefix index: signature(25), test(50), created
             ('signature', 'test', 'created')
         )
         unique_together = (
